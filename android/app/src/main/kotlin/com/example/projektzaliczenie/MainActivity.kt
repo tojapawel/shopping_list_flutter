@@ -1,4 +1,4 @@
-package com.example.kaktus_app
+package com.example.projektzaliczenie
 
 import io.flutter.embedding.android.FlutterActivity
 
