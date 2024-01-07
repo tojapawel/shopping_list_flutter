@@ -17,17 +17,72 @@ class _ShoppingListState extends State<ShoppingList> {
   TextEditingController productController = TextEditingController();
   TextEditingController quantityController = TextEditingController();
 
-  void addProduct() {
-    setState(() {
-      String newProduct = productController.text;
-      String newQuantity = quantityController.text;
+  void addProduct() async {
+    productController.clear();
+    quantityController.clear();
 
-      if (newProduct.isNotEmpty && newQuantity.isNotEmpty) {
-        products.add({'name': newProduct, 'quantity': newQuantity, 'purchased': false});
-        productController.clear();
-        quantityController.clear();
-      }
-    });
+    await showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16.0),
+          ),
+          child: Container(
+            padding: EdgeInsets.all(16.0),
+            width: double.infinity,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Dodaj nowy produkt',
+                  style: TextStyle(
+                    fontSize: 18.0,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                SizedBox(height: 20.0),
+                TextField(
+                  controller: productController,
+                  decoration: InputDecoration(labelText: 'Nazwa produktu'),
+                ),
+                TextField(
+                  controller: quantityController,
+                  decoration: InputDecoration(labelText: 'Ilość'),
+                  keyboardType: TextInputType.number,
+                ),
+                SizedBox(height: 20.0),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    ElevatedButton(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                      },
+                      child: Text('Anuluj'),
+                    ),
+                    ElevatedButton(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                        setState(() {
+                          String newProduct = productController.text;
+                          String newQuantity = quantityController.text;
+
+                          if (newProduct.isNotEmpty && newQuantity.isNotEmpty) {
+                            products.add({'name': newProduct, 'quantity': newQuantity, 'purchased': false});
+                          }
+                        });
+                      },
+                      child: Text('Dodaj'),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 
   void editProduct(int index) async {
@@ -76,11 +131,11 @@ class _ShoppingListState extends State<ShoppingList> {
                     ),
                     ElevatedButton(
                       onPressed: () {
+                        Navigator.of(context).pop();
                         setState(() {
                           products[index]['name'] = editProductController.text;
                           products[index]['quantity'] = editQuantityController.text;
                         });
-                        Navigator.of(context).pop();
                       },
                       child: Text('Zapisz'),
                     ),
@@ -131,31 +186,6 @@ class _ShoppingListState extends State<ShoppingList> {
       ),
       body: Column(
         children: [
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: productController,
-                    decoration: InputDecoration(labelText: 'Nazwa produktu'),
-                  ),
-                ),
-                SizedBox(width: 10),
-                Expanded(
-                  child: TextField(
-                    controller: quantityController,
-                    decoration: InputDecoration(labelText: 'Ilość'),
-                    keyboardType: TextInputType.number,
-                  ),
-                ),
-                IconButton(
-                  icon: Icon(Icons.add),
-                  onPressed: addProduct,
-                ),
-              ],
-            ),
-          ),
           Expanded(
             child: ListView.builder(
               itemCount: products.length,
@@ -227,6 +257,17 @@ class _ShoppingListState extends State<ShoppingList> {
           ),
         ],
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: addProduct,
+        tooltip: 'Dodaj produkt',
+        child: Icon(Icons.add),
+      ),
     );
   }
+}
+
+void main() {
+  runApp(MaterialApp(
+    home: ShoppingList(),
+  ));
 }
