@@ -18,7 +18,7 @@ class _ShoppingListState extends State<ShoppingList> {
       String newQuantity = quantityController.text;
 
       if (newProduct.isNotEmpty && newQuantity.isNotEmpty) {
-        products.add({'name': newProduct, 'quantity': newQuantity});
+        products.add({'name': newProduct, 'quantity': newQuantity, 'purchased': false});
         productController.clear();
         quantityController.clear();
       }
@@ -26,10 +26,8 @@ class _ShoppingListState extends State<ShoppingList> {
   }
 
   void editProduct(int index) async {
-    TextEditingController editProductController =
-    TextEditingController(text: products[index]['name']);
-    TextEditingController editQuantityController =
-    TextEditingController(text: products[index]['quantity']);
+    TextEditingController editProductController = TextEditingController(text: products[index]['name']);
+    TextEditingController editQuantityController = TextEditingController(text: products[index]['quantity']);
 
     await showDialog(
       context: context,
@@ -75,8 +73,7 @@ class _ShoppingListState extends State<ShoppingList> {
                       onPressed: () {
                         setState(() {
                           products[index]['name'] = editProductController.text;
-                          products[index]['quantity'] =
-                              editQuantityController.text;
+                          products[index]['quantity'] = editQuantityController.text;
                         });
                         Navigator.of(context).pop();
                       },
@@ -106,6 +103,21 @@ class _ShoppingListState extends State<ShoppingList> {
 
   @override
   Widget build(BuildContext context) {
+    products.sort((a, b) {
+      if (a['purchased'] == b['purchased']) {
+        return 0;
+      }
+      return a['purchased'] ? 1 : -1;
+    });
+
+    // Sort by insertion order for unchecked items
+    int uncheckedIndex = products.indexWhere((product) => !product['purchased']);
+    if (uncheckedIndex != -1 && uncheckedIndex < products.length - 1) {
+      var uncheckedItems = products.sublist(uncheckedIndex + 1);
+      uncheckedItems.sort((a, b) => a['purchased'] ? 1 : 0);
+      products.replaceRange(uncheckedIndex + 1, products.length, uncheckedItems);
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: Row(
@@ -150,27 +162,75 @@ class _ShoppingListState extends State<ShoppingList> {
             child: ListView.builder(
               itemCount: products.length,
               itemBuilder: (context, index) {
-                return ListTile(
-                  title: Text(
-                      '${products[index]['name']} - ${products[index]['quantity']}'),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
+                if (index > 0 && products[index]['purchased'] != products[index - 1]['purchased']) {
+                  // Insert a separator when the 'purchased' status changes
+                  return Column(
                     children: [
-                      IconButton(
-                        icon: Icon(Icons.edit),
-                        onPressed: () => editProduct(index),
-                      ),
-                      IconButton(
-                        icon: Icon(Icons.remove),
-                        onPressed: () => removeProduct(index),
-                      ),
+                      Divider(), // Add a line separator
+                      _buildProductCard(products, index),
                     ],
-                  ),
-                );
+                  );
+                } else {
+                  return _buildProductCard(products, index);
+                }
               },
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildProductCard(List<Map<String, dynamic>> sortedProducts, int index) {
+    return Card(
+      child: Container(
+        padding: EdgeInsets.all(8.0),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Expanded(
+              child: Text(
+                '${sortedProducts[index]['name']}',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  decoration: sortedProducts[index]['purchased'] ? TextDecoration.lineThrough : TextDecoration.none,
+                ),
+              ),
+            ),
+            SizedBox(width: 10.0),
+            Expanded(
+              child: Text(
+                '${sortedProducts[index]['quantity']}',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  decoration: sortedProducts[index]['purchased'] ? TextDecoration.lineThrough : TextDecoration.none,
+                ),
+              ),
+            ),
+            SizedBox(width: 10.0),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  icon: Icon(Icons.edit),
+                  onPressed: () => editProduct(index),
+                ),
+                IconButton(
+                  icon: Icon(Icons.remove),
+                  onPressed: () => removeProduct(index),
+                ),
+                IconButton(
+                  icon: Icon(sortedProducts[index]['purchased'] ? Icons.check_box : Icons.check_box_outline_blank),
+                  onPressed: () {
+                    setState(() {
+                      sortedProducts[index]['purchased'] = !sortedProducts[index]['purchased'];
+                    });
+                  },
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
