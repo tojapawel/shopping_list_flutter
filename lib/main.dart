@@ -29,10 +29,33 @@ class _ShoppingListState extends State<ShoppingList> {
     {'name': 'Jajka', 'quantity': '10 sztuk', 'purchased': true},
     {'name': 'Jabłka', 'quantity': '5 sztuk', 'purchased': true},
     {'name': 'Makaron', 'quantity': '3 opakowania', 'purchased': false},
+    {'name': 'Pomidor', 'quantity': '4 sztuki', 'purchased': false},
+    {'name': 'Cebula', 'quantity': '3 sztuki', 'purchased': false},
+    {'name': 'Oliwa z oliwek', 'quantity': '0.5 litra', 'purchased': true},
+    {'name': 'Papryka', 'quantity': '2 sztuki', 'purchased': false},
+    {'name': 'Ser', 'quantity': '200 gramów', 'purchased': true},
+    {'name': 'Kawa', 'quantity': '250 gramów', 'purchased': false},
+    {'name': 'Herbata', 'quantity': '50 torebek', 'purchased': false},
+    {'name': 'Cukier', 'quantity': '1 kilogram', 'purchased': true},
+    {'name': 'Mąka', 'quantity': '500 gramów', 'purchased': false},
+    {'name': 'Ryż', 'quantity': '1 kilogram', 'purchased': false},
+    {'name': 'Owoce leśne', 'quantity': '300 gramów', 'purchased': true},
+    {'name': 'Chipsy', 'quantity': '2 opakowania', 'purchased': false},
+    {'name': 'Piwo', 'quantity': '6 butelek', 'purchased': true},
+    {'name': 'Szynka', 'quantity': '150 gramów', 'purchased': false},
   ];
+
+  late List<Map<String, dynamic>> originalProducts;
 
   TextEditingController productController = TextEditingController();
   TextEditingController quantityController = TextEditingController();
+  TextEditingController searchController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    originalProducts = List.from(products);
+  }
 
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   Map<String, dynamic>? lastRemovedItem;
@@ -94,6 +117,11 @@ class _ShoppingListState extends State<ShoppingList> {
                               'name': newProduct,
                               'quantity': newQuantity,
                               'purchased': false
+                            });
+                            originalProducts.add({
+                            'name': newProduct,
+                            'quantity': newQuantity,
+                            'purchased': false
                             });
                           }
                         });
@@ -213,6 +241,23 @@ class _ShoppingListState extends State<ShoppingList> {
     });
   }
 
+  void searchProduct(String query) {
+    setState(() {
+      if (query.isEmpty) {
+        // If the query is empty, show all products
+        products = List.from(originalProducts);
+      } else {
+        // Otherwise, filter products based on the query
+        products = originalProducts.where((product) {
+          return product['name']
+              .toLowerCase()
+              .contains(query.toLowerCase());
+        }).toList();
+      }
+    });
+  }
+
+
   @override
   Widget build(BuildContext context) {
     products.sort((a, b) {
@@ -231,6 +276,18 @@ class _ShoppingListState extends State<ShoppingList> {
         ),
         body: Column(
           children: [
+            // Pole wyszukiwania
+            Padding(
+              padding: EdgeInsets.all(8.0),
+              child: TextField(
+                controller: searchController,
+                onChanged: searchProduct,
+                decoration: InputDecoration(
+                  labelText: 'Wyszukaj produkt',
+                  prefixIcon: Icon(Icons.search),
+                ),
+              ),
+            ),
             Expanded(
               child: products.isEmpty
                   ? Center(
@@ -291,7 +348,7 @@ class _ShoppingListState extends State<ShoppingList> {
                                 Expanded(
                                   child: Text(
                                     '${products[index]['quantity']}',
-                                    textAlign: TextAlign.center,
+                                    textAlign: TextAlign.right,
                                     style: TextStyle(
                                       decoration: products[index]
                                       ['purchased']
