@@ -119,9 +119,9 @@ class _ShoppingListState extends State<ShoppingList> {
                               'purchased': false
                             });
                             originalProducts.add({
-                            'name': newProduct,
-                            'quantity': newQuantity,
-                            'purchased': false
+                              'name': newProduct,
+                              'quantity': newQuantity,
+                              'purchased': false
                             });
                           }
                         });
@@ -139,10 +139,10 @@ class _ShoppingListState extends State<ShoppingList> {
   }
 
   void editProduct(int index) async {
-    TextEditingController editProductController = TextEditingController(
-        text: products[index]['name']);
-    TextEditingController editQuantityController = TextEditingController(
-        text: products[index]['quantity']);
+    TextEditingController editProductController =
+        TextEditingController(text: products[index]['name']);
+    TextEditingController editQuantityController =
+        TextEditingController(text: products[index]['quantity']);
 
     await showDialog(
       context: context,
@@ -241,6 +241,7 @@ class _ShoppingListState extends State<ShoppingList> {
     });
   }
 
+  // Funkcja wyszukiwania produktów na podstawie zapytania
   void searchProduct(String query) {
     setState(() {
       if (query.isEmpty) {
@@ -249,9 +250,7 @@ class _ShoppingListState extends State<ShoppingList> {
       } else {
         // Otherwise, filter products based on the query
         products = originalProducts.where((product) {
-          return product['name']
-              .toLowerCase()
-              .contains(query.toLowerCase());
+          return product['name'].toLowerCase().contains(query.toLowerCase());
         }).toList();
       }
     });
@@ -290,104 +289,107 @@ class _ShoppingListState extends State<ShoppingList> {
             Expanded(
               child: products.isEmpty
                   ? Center(
-                child: Text(
-                  'Lista zakupów jest pusta.',
-                  style: TextStyle(fontSize: 18.0),
-                ),
-              )
-                  : ListView.builder(
-                itemCount: products.length,
-                itemBuilder: (context, index) {
-                  bool isFirstItem = index == 0;
-                  bool isStatusChanged = index > 0 &&
-                      products[index]['purchased'] !=
-                          products[index - 1]['purchased'];
-
-                  return Column(
-                    children: [
-                      if (!isFirstItem && isStatusChanged) Divider(),
-                      Dismissible(
-                        key: Key(products[index]['name']),
-                        onDismissed: (direction) {
-                          if (direction == DismissDirection.endToStart) {
-                            removeProduct(index);
-                          }
-                        },
-                        direction: DismissDirection.endToStart,
-                        background: Container(
-                          color: Colors.red,
-                          child: Align(
-                            alignment: Alignment.centerRight,
-                            child: Padding(
-                              padding: EdgeInsets.only(right: 16.0),
-                              child: Icon(Icons.delete, color: Colors.white),
-                            ),
-                          ),
-                        ),
-                        child: Card(
-                          child: Container(
-                            padding: EdgeInsets.all(10.0),
-                            child: Row(
-                              mainAxisAlignment:
-                              MainAxisAlignment.spaceBetween,
-                              children: [
-                                Expanded(
-                                  child: Text(
-                                    '${products[index]['name']}',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      decoration: products[index]
-                                      ['purchased']
-                                          ? TextDecoration.lineThrough
-                                          : TextDecoration.none,
-                                    ),
-                                  ),
-                                ),
-                                SizedBox(width: 10.0),
-                                Expanded(
-                                  child: Text(
-                                    '${products[index]['quantity']}',
-                                    textAlign: TextAlign.right,
-                                    style: TextStyle(
-                                      decoration: products[index]
-                                      ['purchased']
-                                          ? TextDecoration.lineThrough
-                                          : TextDecoration.none,
-                                    ),
-                                  ),
-                                ),
-                                SizedBox(width: 10.0),
-                                Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    IconButton(
-                                      icon: Icon(Icons.edit),
-                                      onPressed: () => editProduct(index),
-                                    ),
-                                    IconButton(
-                                      icon: Icon(
-                                        products[index]['purchased']
-                                            ? Icons.check_box
-                                            : Icons.check_box_outline_blank,
-                                      ),
-                                      onPressed: () {
-                                        setState(() {
-                                          products[index]['purchased'] =
-                                          !products[index]['purchased'];
-                                        });
-                                      },
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
+                      child: Text(
+                        'Lista zakupów jest pusta.',
+                        style: TextStyle(fontSize: 18.0),
                       ),
-                    ],
-                  );
-                },
-              ),
+                    )
+                  : ListView.builder(
+                      itemCount: products.length,
+                      itemBuilder: (context, index) {
+                        bool isFirstItem = index == 0;
+                        bool isStatusChanged = index > 0 &&
+                            products[index]['purchased'] !=
+                                products[index - 1]['purchased'];
+
+                        return Column(
+                          children: [
+                            if (!isFirstItem && isStatusChanged) Divider(),
+                            Dismissible(
+                              key: Key(products[index]['name']),
+                              onDismissed: (direction) {
+                                if (direction == DismissDirection.endToStart) {
+                                  removeProduct(index);
+                                }
+                              },
+                              direction: DismissDirection.endToStart,
+                              background: Container(
+                                color: Colors.red,
+                                child: Align(
+                                  alignment: Alignment.centerRight,
+                                  child: Padding(
+                                    padding: EdgeInsets.only(right: 16.0),
+                                    child:
+                                        Icon(Icons.delete, color: Colors.white),
+                                  ),
+                                ),
+                              ),
+                              child: Card(
+                                child: Container(
+                                  padding: EdgeInsets.all(10.0),
+                                  child: Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Expanded(
+                                        child: Text(
+                                          '${products[index]['name']}',
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            decoration: products[index]
+                                                    ['purchased']
+                                                ? TextDecoration.lineThrough
+                                                : TextDecoration.none,
+                                          ),
+                                        ),
+                                      ),
+                                      SizedBox(width: 10.0),
+                                      Expanded(
+                                        child: Text(
+                                          '${products[index]['quantity']}',
+                                          textAlign: TextAlign.right,
+                                          style: TextStyle(
+                                            decoration: products[index]
+                                                    ['purchased']
+                                                ? TextDecoration.lineThrough
+                                                : TextDecoration.none,
+                                          ),
+                                        ),
+                                      ),
+                                      SizedBox(width: 10.0),
+                                      Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          IconButton(
+                                            icon: Icon(Icons.edit),
+                                            onPressed: () => editProduct(index),
+                                          ),
+                                          IconButton(
+                                            icon: Icon(
+                                              products[index]['purchased']
+                                                  ? Icons.check_box
+                                                  : Icons
+                                                      .check_box_outline_blank,
+                                            ),
+                                            onPressed: () {
+                                              setState(() {
+                                                products[index]['purchased'] =
+                                                    !products[index]
+                                                        ['purchased'];
+                                              });
+                                            },
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        );
+                      },
+                    ),
             ),
           ],
         ),
