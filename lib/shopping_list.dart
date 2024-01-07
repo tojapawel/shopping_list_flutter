@@ -17,6 +17,9 @@ class _ShoppingListState extends State<ShoppingList> {
   TextEditingController productController = TextEditingController();
   TextEditingController quantityController = TextEditingController();
 
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  Map<String, dynamic>? lastRemovedItem;
+
   void addProduct() async {
     productController.clear();
     quantityController.clear();
@@ -150,10 +153,30 @@ class _ShoppingListState extends State<ShoppingList> {
   }
 
   void removeProduct(int index) {
+    lastRemovedItem = products[index];
+
     setState(() {
       products.removeAt(index);
     });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Produkt ${lastRemovedItem?["name"]} został usunięty.'),
+
+        action: SnackBarAction(
+          label: 'Cofnij',
+          onPressed: () {
+            setState(() {
+              products.insert(index, lastRemovedItem!);
+            });
+
+            lastRemovedItem = null;
+          },
+        ),
+      ),
+    );
   }
+
 
   void resetList() {
     setState(() {
@@ -163,7 +186,6 @@ class _ShoppingListState extends State<ShoppingList> {
 
   @override
   Widget build(BuildContext context) {
-    // Sort by purchased status and then by insertion order
     products.sort((a, b) {
       if (a['purchased'] == b['purchased']) {
         return 0;
@@ -172,6 +194,7 @@ class _ShoppingListState extends State<ShoppingList> {
     });
 
     return Scaffold(
+      key: _scaffoldKey,
       appBar: AppBar(
         title: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -190,63 +213,76 @@ class _ShoppingListState extends State<ShoppingList> {
             child: ListView.builder(
               itemCount: products.length,
               itemBuilder: (context, index) {
-                // Check if it's the first item or if the purchased status changes
                 bool isFirstItem = index == 0;
                 bool isStatusChanged = index > 0 && products[index]['purchased'] != products[index - 1]['purchased'];
 
                 return Column(
                   children: [
-                    if (!isFirstItem && isStatusChanged)
-                      Divider(), // Add a Divider between unpurchased and purchased items
+                    if (!isFirstItem && isStatusChanged) Divider(),
 
-                    Card(
-                      child: Container(
-                        padding: EdgeInsets.all(8.0),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Expanded(
-                              child: Text(
-                                '${products[index]['name']}',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  decoration: products[index]['purchased'] ? TextDecoration.lineThrough : TextDecoration.none,
+                    Dismissible(
+                      key: Key(products[index]['name']),
+                      onDismissed: (direction) {
+                        if (direction == DismissDirection.startToEnd) {
+                          removeProduct(index);
+                        }
+                      },
+                      direction: DismissDirection.startToEnd,
+                      background: Container(
+                        color: Colors.red,
+                        child: Align(
+                          alignment: Alignment.centerLeft,
+                          child: Padding(
+                            padding: EdgeInsets.only(left: 16.0),
+                            child: Icon(Icons.delete, color: Colors.white),
+                          ),
+                        ),
+                      ),
+                      child: Card(
+                        child: Container(
+                          padding: EdgeInsets.all(8.0),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  '${products[index]['name']}',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    decoration: products[index]['purchased'] ? TextDecoration.lineThrough : TextDecoration.none,
+                                  ),
                                 ),
                               ),
-                            ),
-                            SizedBox(width: 10.0),
-                            Expanded(
-                              child: Text(
-                                '${products[index]['quantity']}',
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  decoration: products[index]['purchased'] ? TextDecoration.lineThrough : TextDecoration.none,
+                              SizedBox(width: 10.0),
+                              Expanded(
+                                child: Text(
+                                  '${products[index]['quantity']}',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    decoration: products[index]['purchased'] ? TextDecoration.lineThrough : TextDecoration.none,
+                                  ),
                                 ),
                               ),
-                            ),
-                            SizedBox(width: 10.0),
-                            Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                IconButton(
-                                  icon: Icon(Icons.edit),
-                                  onPressed: () => editProduct(index),
-                                ),
-                                IconButton(
-                                  icon: Icon(Icons.remove),
-                                  onPressed: () => removeProduct(index),
-                                ),
-                                IconButton(
-                                  icon: Icon(products[index]['purchased'] ? Icons.check_box : Icons.check_box_outline_blank),
-                                  onPressed: () {
-                                    setState(() {
-                                      products[index]['purchased'] = !products[index]['purchased'];
-                                    });
-                                  },
-                                ),
-                              ],
-                            ),
-                          ],
+                              SizedBox(width: 10.0),
+                              Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  IconButton(
+                                    icon: Icon(Icons.edit),
+                                    onPressed: () => editProduct(index),
+                                  ),
+                                  IconButton(
+                                    icon: Icon(products[index]['purchased'] ? Icons.check_box : Icons.check_box_outline_blank),
+                                    onPressed: () {
+                                      setState(() {
+                                        products[index]['purchased'] = !products[index]['purchased'];
+                                      });
+                                    },
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ),
