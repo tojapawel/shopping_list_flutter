@@ -1,4 +1,3 @@
-// shopping_list.dart
 import 'package:flutter/material.dart';
 
 class ShoppingList extends StatefulWidget {
@@ -7,7 +6,13 @@ class ShoppingList extends StatefulWidget {
 }
 
 class _ShoppingListState extends State<ShoppingList> {
-  List<Map<String, dynamic>> products = [];
+  List<Map<String, dynamic>> products = [
+    {'name': 'Mleko', 'quantity': '1 litr', 'purchased': false},
+    {'name': 'Chleb', 'quantity': '2 bochenki', 'purchased': false},
+    {'name': 'Jajka', 'quantity': '10 sztuk', 'purchased': true},
+    {'name': 'Jabłka', 'quantity': '5 sztuk', 'purchased': true},
+    {'name': 'Makaron', 'quantity': '3 opakowania', 'purchased': false},
+  ];
 
   TextEditingController productController = TextEditingController();
   TextEditingController quantityController = TextEditingController();
@@ -152,74 +157,72 @@ class _ShoppingListState extends State<ShoppingList> {
             ),
           ),
           Expanded(
-            child: Expanded(
-              child: ListView.builder(
-                itemCount: products.length,
-                itemBuilder: (context, index) {
-                  // Check if it's the first item or if the purchased status changes
-                  bool isFirstItem = index == 0;
-                  bool isStatusChanged = index > 0 && products[index]['purchased'] != products[index - 1]['purchased'];
+            child: ListView.builder(
+              itemCount: products.length,
+              itemBuilder: (context, index) {
+                // Check if it's the first item or if the purchased status changes
+                bool isFirstItem = index == 0;
+                bool isStatusChanged = index > 0 && products[index]['purchased'] != products[index - 1]['purchased'];
 
-                  return Column(
-                    children: [
-                      if (!isFirstItem && isStatusChanged)
-                        Divider(), // Add a Divider between unpurchased and purchased items
+                return Column(
+                  children: [
+                    if (!isFirstItem && isStatusChanged)
+                      Divider(), // Add a Divider between unpurchased and purchased items
 
-                      Card(
-                        child: Container(
-                          padding: EdgeInsets.all(8.0),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  '${products[index]['name']}',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    decoration: products[index]['purchased'] ? TextDecoration.lineThrough : TextDecoration.none,
-                                  ),
+                    Card(
+                      child: Container(
+                        padding: EdgeInsets.all(8.0),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Expanded(
+                              child: Text(
+                                '${products[index]['name']}',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  decoration: products[index]['purchased'] ? TextDecoration.lineThrough : TextDecoration.none,
                                 ),
                               ),
-                              SizedBox(width: 10.0),
-                              Expanded(
-                                child: Text(
-                                  '${products[index]['quantity']}',
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    decoration: products[index]['purchased'] ? TextDecoration.lineThrough : TextDecoration.none,
-                                  ),
+                            ),
+                            SizedBox(width: 10.0),
+                            Expanded(
+                              child: Text(
+                                '${products[index]['quantity']}',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  decoration: products[index]['purchased'] ? TextDecoration.lineThrough : TextDecoration.none,
                                 ),
                               ),
-                              SizedBox(width: 10.0),
-                              Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  IconButton(
-                                    icon: Icon(Icons.edit),
-                                    onPressed: () => editProduct(index),
-                                  ),
-                                  IconButton(
-                                    icon: Icon(Icons.remove),
-                                    onPressed: () => removeProduct(index),
-                                  ),
-                                  IconButton(
-                                    icon: Icon(products[index]['purchased'] ? Icons.check_box : Icons.check_box_outline_blank),
-                                    onPressed: () {
-                                      setState(() {
-                                        products[index]['purchased'] = !products[index]['purchased'];
-                                      });
-                                    },
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
+                            ),
+                            SizedBox(width: 10.0),
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                IconButton(
+                                  icon: Icon(Icons.edit),
+                                  onPressed: () => editProduct(index),
+                                ),
+                                IconButton(
+                                  icon: Icon(Icons.remove),
+                                  onPressed: () => removeProduct(index),
+                                ),
+                                IconButton(
+                                  icon: Icon(products[index]['purchased'] ? Icons.check_box : Icons.check_box_outline_blank),
+                                  onPressed: () {
+                                    setState(() {
+                                      products[index]['purchased'] = !products[index]['purchased'];
+                                    });
+                                  },
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
                       ),
-                    ],
-                  );
-                },
-              ),
+                    ),
+                  ],
+                );
+              },
             ),
           ),
         ],
