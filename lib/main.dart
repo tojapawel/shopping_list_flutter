@@ -257,7 +257,6 @@ class _ShoppingListState extends State<ShoppingList> {
     });
   }
 
-
   @override
   Widget build(BuildContext context) {
     products.sort((a, b) {
