@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 
 void main() {
   runApp(MyApp());
@@ -12,37 +14,95 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: ShoppingList(),
+      home: WelcomeScreen(),
+    );
+  }
+}
+
+class WelcomeScreen extends StatefulWidget {
+  @override
+  _WelcomeScreenState createState() => _WelcomeScreenState();
+}
+
+class _WelcomeScreenState extends State<WelcomeScreen> {
+  final TextEditingController emailController = TextEditingController();
+
+  void proceedToShoppingList() {
+    final email = emailController.text;
+    if (email.isNotEmpty) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ShoppingList(email: email),
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Proszę podać email'),
+        ),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Shopping List'),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            TextField(
+              controller: emailController,
+              decoration: InputDecoration(labelText: 'Email'),
+              keyboardType: TextInputType.emailAddress,
+            ),
+            SizedBox(height: 20.0),
+            ElevatedButton(
+              onPressed: proceedToShoppingList,
+              child: Text('Dalej'),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
 
 class ShoppingList extends StatefulWidget {
+  final String email;
+
+  ShoppingList({required this.email});
+
   @override
   _ShoppingListState createState() => _ShoppingListState();
 }
 
 class _ShoppingListState extends State<ShoppingList> {
   List<Map<String, dynamic>> products = [
-    {'name': 'Mleko', 'quantity': '1 litr', 'purchased': false},
-    {'name': 'Chleb', 'quantity': '2 bochenki', 'purchased': false},
-    {'name': 'Jajka', 'quantity': '10 sztuk', 'purchased': true},
-    {'name': 'Jabłka', 'quantity': '5 sztuk', 'purchased': true},
-    {'name': 'Makaron', 'quantity': '3 opakowania', 'purchased': false},
-    {'name': 'Pomidor', 'quantity': '4 sztuki', 'purchased': false},
-    {'name': 'Cebula', 'quantity': '3 sztuki', 'purchased': false},
-    {'name': 'Oliwa z oliwek', 'quantity': '0.5 litra', 'purchased': true},
-    {'name': 'Papryka', 'quantity': '2 sztuki', 'purchased': false},
-    {'name': 'Ser', 'quantity': '200 gramów', 'purchased': true},
-    {'name': 'Kawa', 'quantity': '250 gramów', 'purchased': false},
-    {'name': 'Herbata', 'quantity': '50 torebek', 'purchased': false},
-    {'name': 'Cukier', 'quantity': '1 kilogram', 'purchased': true},
-    {'name': 'Mąka', 'quantity': '500 gramów', 'purchased': false},
-    {'name': 'Ryż', 'quantity': '1 kilogram', 'purchased': false},
-    {'name': 'Owoce leśne', 'quantity': '300 gramów', 'purchased': true},
-    {'name': 'Chipsy', 'quantity': '2 opakowania', 'purchased': false},
-    {'name': 'Piwo', 'quantity': '6 butelek', 'purchased': true},
-    {'name': 'Szynka', 'quantity': '150 gramów', 'purchased': false},
+    // {'name': 'Mleko', 'quantity': '1 litr', 'purchased': false},
+    // {'name': 'Chleb', 'quantity': '2 bochenki', 'purchased': false},
+    // {'name': 'Jajka', 'quantity': '10 sztuk', 'purchased': true},
+    // {'name': 'Jabłka', 'quantity': '5 sztuk', 'purchased': true},
+    // {'name': 'Makaron', 'quantity': '3 opakowania', 'purchased': false},
+    // {'name': 'Pomidor', 'quantity': '4 sztuki', 'purchased': false},
+    // {'name': 'Cebula', 'quantity': '3 sztuki', 'purchased': false},
+    // {'name': 'Oliwa z oliwek', 'quantity': '0.5 litra', 'purchased': true},
+    // {'name': 'Papryka', 'quantity': '2 sztuki', 'purchased': false},
+    // {'name': 'Ser', 'quantity': '200 gramów', 'purchased': true},
+    // {'name': 'Kawa', 'quantity': '250 gramów', 'purchased': false},
+    // {'name': 'Herbata', 'quantity': '50 torebek', 'purchased': false},
+    // {'name': 'Cukier', 'quantity': '1 kilogram', 'purchased': true},
+    // {'name': 'Mąka', 'quantity': '500 gramów', 'purchased': false},
+    // {'name': 'Ryż', 'quantity': '1 kilogram', 'purchased': false},
+    // {'name': 'Owoce leśne', 'quantity': '300 gramów', 'purchased': true},
+    // {'name': 'Chipsy', 'quantity': '2 opakowania', 'purchased': false},
+    // {'name': 'Piwo', 'quantity': '6 butelek', 'purchased': true},
+    // {'name': 'Szynka', 'quantity': '150 gramów', 'purchased': false},
   ];
 
   late List<Map<String, dynamic>> originalProducts;
@@ -54,12 +114,83 @@ class _ShoppingListState extends State<ShoppingList> {
   @override
   void initState() {
     super.initState();
+    getShoppingListfromServer();
     originalProducts = List.from(products);
   }
 
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   Map<String, dynamic>? lastRemovedItem;
   bool isDarkMode = false;
+
+  void sendShoppingListToServer() async {
+    final url = Uri.parse(
+        'https://flutterapi.domkimagicznyzakatek.pl/api/y8qrq25w/${widget.email}/addlist');
+    final headers = <String, String>{
+      'Content-Type': 'application/json',
+    };
+
+    if (products.isNotEmpty) {
+      // print(products);
+      try {
+        final response = await http.post(
+          url,
+          headers: headers,
+          body: jsonEncode(products), // Convert list to JSON format
+        );
+
+        if (response.statusCode == 200) {
+          // Request successful, handle accordingly
+          print('Shopping list sent successfully.');
+          ScaffoldMessenger.of(_scaffoldKey.currentContext!).showSnackBar(
+            SnackBar(
+              content: Text('Lista została zapisana na serwerze'),
+            ),
+          );
+          // You can handle response data if needed
+        } else {
+          // Request failed
+          print('Failed to send shopping list. Error ${response.statusCode}');
+          // Print error message if needed: print(response.body);
+        }
+      } catch (e) {
+        // Exception occurred
+        print('Exception during shopping list send: $e');
+      }
+    }
+  }
+
+  void getShoppingListfromServer() async {
+    List<dynamic> _productsFromServer = [];
+
+    final url = Uri.parse(
+        'https://flutterapi.domkimagicznyzakatek.pl/api/y8qrq25w/${widget.email}/getlist');
+    try {
+      final response = await http.post(url);
+      if (response.statusCode == 200) {
+        _productsFromServer = json.decode(response.body);
+        ScaffoldMessenger.of(_scaffoldKey.currentContext!).showSnackBar(
+            SnackBar(
+              content: Text('Lista została pobrana z serwera'),
+            ),
+          );
+      } else {
+        // Handle other status codes
+        _productsFromServer = [];
+      }
+    } catch (e) {
+      // Handle any exceptions thrown during the request
+      print('Failed to connect to the server: $e');
+    }
+
+    setState(() {
+      originalProducts = _productsFromServer
+          .map((item) => item as Map<String, dynamic>)
+          .toList();
+      products = List.from(originalProducts);
+    });
+
+    print(originalProducts);
+  }
 
   void addProduct() async {
     productController.clear();
@@ -123,6 +254,7 @@ class _ShoppingListState extends State<ShoppingList> {
                               'quantity': newQuantity,
                               'purchased': false
                             });
+                            sendShoppingListToServer();
                           }
                         });
                       },
@@ -191,6 +323,7 @@ class _ShoppingListState extends State<ShoppingList> {
                           products[index]['name'] = editProductController.text;
                           products[index]['quantity'] =
                               editQuantityController.text;
+                          sendShoppingListToServer();
                         });
                       },
                       child: Text('Zapisz'),
@@ -211,6 +344,8 @@ class _ShoppingListState extends State<ShoppingList> {
     setState(() {
       products.removeAt(index);
     });
+
+    sendShoppingListToServer();
 
     ScaffoldMessenger.of(_scaffoldKey.currentContext!).showSnackBar(
       SnackBar(
@@ -270,7 +405,7 @@ class _ShoppingListState extends State<ShoppingList> {
       home: Scaffold(
         key: _scaffoldKey,
         appBar: AppBar(
-          title: const Text('Lista zakupów'),
+          title: Text('Lista zakupów. Zalogowany jako: ${widget.email}'),
         ),
         body: Column(
           children: [
@@ -376,6 +511,7 @@ class _ShoppingListState extends State<ShoppingList> {
                                                 products[index]['purchased'] =
                                                     !products[index]
                                                         ['purchased'];
+                                                sendShoppingListToServer();
                                               });
                                             },
                                           ),
@@ -419,6 +555,22 @@ class _ShoppingListState extends State<ShoppingList> {
                   icon: Icon(Icons.refresh),
                   tooltip: "Resetuj listę",
                   onPressed: resetList,
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: IconButton(
+                  icon: Icon(Icons.send),
+                  tooltip: "Wyślij do bazy danych",
+                  onPressed: sendShoppingListToServer,
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: IconButton(
+                  icon: Icon(Icons.download),
+                  tooltip: "Pobierz listę z bazy danych",
+                  onPressed: getShoppingListfromServer,
                 ),
               ),
             ],
